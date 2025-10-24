@@ -10,6 +10,7 @@ import net.minecraft.nbt.NbtUtils;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.ColorResolver;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -25,9 +26,9 @@ import java.util.Map;
 public class NBTData implements BlockAndTintGetter {
 
     public CompoundTag compoundTag;
-    public Map<BlockPos, BlockState> blockRenderMap;
-    public Map<BlockPos, FluidState> fluidRenderMap;
-    public Map<BlockPos, BlockEntity> blockEntityMap;
+    public Map<BlockPos, BlockState> blockStateMap;
+    public Map<BlockPos, FluidState> fluidStateMap;
+    public Map<BlockPos, CompoundTag> blockEntityMap;
     public BlockPos offset = new BlockPos(0, 0, 0);
     public int x;
     public int y;
@@ -40,7 +41,7 @@ public class NBTData implements BlockAndTintGetter {
 
     public void init() {
         Map<BlockPos, BlockState> renderMap = new HashMap<>();
-        Map<BlockPos, BlockEntity> entityMap = new HashMap<>();
+        Map<BlockPos, CompoundTag> entityMap = new HashMap<>();
         Map<BlockPos, FluidState> fluidMap = new HashMap<>();
 
         var bg = Minecraft.getInstance().level.registryAccess().lookupOrThrow(Registries.BLOCK);
@@ -57,19 +58,19 @@ public class NBTData implements BlockAndTintGetter {
                 renderMap.put(key, value);
 
                 //FluidState
-                if(!value.getFluidState().isEmpty()){
+                if (!value.getFluidState().isEmpty()) {
                     fluidMap.put(key, value.getFluidState());
                 }
 
                 //BlockEntity
-                if(((CompoundTag) block).contains("nbt", Tag.TAG_COMPOUND)) {
-                    entityMap.put(key,BlockEntity.loadStatic(key,value,((CompoundTag) block).getCompound("nbt")));
+                if (((CompoundTag) block).contains("nbt", Tag.TAG_COMPOUND)) {
+                    entityMap.put(key, ((CompoundTag) block).getCompound("nbt"));
                 }
             }
         }
-        blockRenderMap = renderMap;
+        blockStateMap = renderMap;
         blockEntityMap = entityMap;
-        fluidRenderMap = fluidMap;
+        fluidStateMap = fluidMap;
         var size = compoundTag.getList("size", Tag.TAG_INT);
         x = size.getInt(0);
         y = size.getInt(1);
@@ -95,12 +96,12 @@ public class NBTData implements BlockAndTintGetter {
     @Nullable
     @Override
     public BlockEntity getBlockEntity(BlockPos blockPos) {
-        return blockEntityMap.get(blockPos);
+        return null;
     }
 
     @Override
     public BlockState getBlockState(BlockPos blockPos) {
-        return blockRenderMap.getOrDefault(blockPos, Blocks.AIR.defaultBlockState());
+        return blockStateMap.getOrDefault(blockPos, Blocks.AIR.defaultBlockState());
     }
 
     @Override
@@ -116,5 +117,21 @@ public class NBTData implements BlockAndTintGetter {
     @Override
     public int getMinBuildHeight() {
         return Minecraft.getInstance().level.getMinBuildHeight();
+    }
+
+    public static BlockPos mergePos(BlockPos pos, BlockPos pos2) {
+        return new BlockPos(pos.getX() + pos2.getX(), pos.getY() + pos2.getY(), pos.getZ() + pos2.getZ());
+    }
+
+    public void setInWorld(Level level, boolean placeBlockEntity) {
+        blockStateMap.forEach((blockPos, state) -> {
+            var z = mergePos(blockPos, offset);
+            level.setBlockAndUpdate(mergePos(blockPos, offset), state);
+        });
+        if (placeBlockEntity) {
+            blockEntityMap.forEach((blockPos, compoundTag1) -> {
+                level.setBlockEntity(BlockEntity.loadStatic(mergePos(blockPos, offset), blockStateMap.get(blockPos), compoundTag1));
+            });
+        }
     }
 }

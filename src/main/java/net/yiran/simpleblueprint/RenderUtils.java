@@ -47,8 +47,8 @@ public class RenderUtils {
 
     public static void renderFluid(NBTData nbtData, PoseStack poseStack, BufferBuilder bufferBuilder) {
         beginRender(bufferBuilder);
-        for (Map.Entry<BlockPos, FluidState> entry : nbtData.fluidRenderMap.entrySet()) {
-            MyFluidRenderer.instance.tesselate(nbtData, entry.getKey(), poseStack, bufferBuilder, nbtData.blockRenderMap.get(entry.getKey()), entry.getValue());
+        for (Map.Entry<BlockPos, FluidState> entry : nbtData.fluidStateMap.entrySet()) {
+            MyFluidRenderer.instance.tesselate(nbtData, entry.getKey(), poseStack, bufferBuilder, nbtData.blockStateMap.get(entry.getKey()), entry.getValue());
         }
         RenderSystem.enableBlend();
         endRender(bufferBuilder);
@@ -58,7 +58,7 @@ public class RenderUtils {
     public static void renderBlock(NBTData nbtData, PoseStack poseStack, BufferBuilder  bufferBuilder) {
         beginRender(bufferBuilder);
         BlockRenderDispatcher blockRenderer = Minecraft.getInstance().getBlockRenderer();
-        nbtData.blockRenderMap.forEach((blockPos, blockstate) -> {
+        nbtData.blockStateMap.forEach((blockPos, blockstate) -> {
             if (blockstate.getRenderShape() != RenderShape.INVISIBLE) {
                 var model = blockRenderer.getBlockModel(blockstate);
                 var modelData = model.getModelData(nbtData, blockPos, blockstate, ModelData.EMPTY);
