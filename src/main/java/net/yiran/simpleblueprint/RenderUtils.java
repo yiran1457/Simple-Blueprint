@@ -37,10 +37,10 @@ public class RenderUtils {
 
     public static void beginRender(BufferBuilder bufferBuilder){
         bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP);
-        bufferBuilder.setQuadSorting(VertexSorting.DISTANCE_TO_ORIGIN);
     }
 
     public static void endRender(BufferBuilder bufferBuilder){
+        bufferBuilder.setQuadSorting(VertexSorting.DISTANCE_TO_ORIGIN);
         BufferUploader.drawWithShader(bufferBuilder.end());
     }
 

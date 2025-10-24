@@ -29,8 +29,13 @@ import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import org.slf4j.Logger;
 
+@SuppressWarnings("removal")
 @Mod(SimpleBlueprint.MODID)
 public class SimpleBlueprint {
     public static final String MODID = "simple_blueprint";
     private static final Logger LOGGER = LogUtils.getLogger();
+
+    public SimpleBlueprint() {
+        MinecraftForge.EVENT_BUS.register(RenderEventTest.class);
+    }
 }
